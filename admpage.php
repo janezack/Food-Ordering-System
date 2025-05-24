@@ -1,0 +1,106 @@
+<?php
+SESSION_START();
+?>
+<!doctype html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css">
+
+    <link rel="stylesheet" href="assets/css/main.css">
+
+    <title>Hello, world!</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon.png">
+</head>
+<body>
+<?php
+$mysqli = new mysqli("localhost", "root", "", "order");
+$sql="SELECT Date, SUM(Quantity), SUM(Cost) FROM orders GROUP BY Date";
+$result = $mysqli->query($sql);
+$s=0;
+if ($result->num_rows > 0) {?>
+<table align="center" border="1" width="100%">
+<tr align="center">
+<th>Date</th>
+<th><table  align="center" width="100%">
+<tr>All orders</tr>
+<tr align="center">
+		<th>Dish</th>
+		<th>Quantity</th>
+		<th>Cost</th>
+		</tr>
+</table>
+</th>
+<th>Number of order</th>
+<th>Total cost per day</th>
+</tr>
+    <?php 
+	while($row = $result->fetch_assoc()) {?>
+        <tr align="center"><td><?=$row["Date"]?></td>
+		<td>
+		<table align="left" width="100%">
+		<?php $connec = new mysqli("localhost", "root", "", "order");
+					$sqlr="SELECT menu.Dish, menu.Price, Quantity FROM orders INNER JOIN menu ON orders.DishID=menu.ID WHERE orders.Date='".$row["Date"]."' ";				
+                    $rests = $connec->query($sqlr);
+					if ($rests->num_rows > 0) { 
+					$array=array();
+					$arr=array();
+					$a=array();
+					while($rowt = $rests->fetch_assoc()){
+						$counter=1;
+						if (in_array($rowt['Dish'], $array)) {
+							$arr[$rowt['Dish']]=$arr[$rowt['Dish']]+$rowt['Quantity'];
+							$a[$rowt['Dish']]=$rowt["Price"]*$arr[$rowt['Dish']];
+						}
+						else {
+							$array[]=$rowt['Dish'];
+							$arr[$rowt['Dish']]=$rowt['Quantity'];
+							$a[$rowt['Dish']]=$rowt["Price"];
+						}
+						
+					}
+						$lt=count($array);
+						for ($i=0; $i<$lt; $i++){
+							?><tr width='100%'><td width='48%'><?php echo $array[$i];?></td>
+							<td width='30%'><?php echo $arr[$array[$i]];?></td>
+							<td width='30%'><?php echo $a[$array[$i]];?>tg</td>  <?php
+						} 
+					}
+		?>
+		</tr>
+		</table>
+		</td>
+		<td><?=$row["SUM(Quantity)"]?></td>
+		<td><?=$row["SUM(Cost)"]?> tg</td></tr>
+		<?php
+		$s=$s+$row["SUM(Cost)"];
+		$a="SELECT*FROM reports WHERE Date='".$row["Date"]."' ";
+		$r = $mysqli->query($a);
+		if ($r->num_rows > 0) {
+			$st ="UPDATE reports SET Date ='".$row["Date"]."' , Number_of_orders = '".$row["SUM(Quantity)"]."', Total_cost = '".$row["SUM(Cost)"]."' WHERE Date ='".$row["Date"]."'";
+			$res=$mysqli->query($st);
+		}
+		else {
+			$strSQL ="insert into reports values ('".$row["Date"]."', '".$row["SUM(Quantity)"]."', '".$row["SUM(Cost)"]."')";
+			$resut=$mysqli->query($strSQL);
+		}
+    }
+	?>
+	<tr>
+    <td colspan="4" align="right">Сумма: <?php echo $s;?> tg</td>
+</tr> 
+</table>
+<?php
+	}
+    else {
+  echo "0 results";
+}
+?>
+
+</body>
+

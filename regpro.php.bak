@@ -1,0 +1,26 @@
+<html>
+<head><title>Добавление пользователя</title></head>
+<body>
+<?php
+$l = mysqli_connect("localhost", "root", "", "foodorder");
+$id=mysqli_real_escape_string($l, $_POST['ID']);
+$n=mysqli_real_escape_string($l, $_POST['name']);
+$t=mysqli_real_escape_string($l, $_POST['telephone']);
+$e=mysqli_real_escape_string($l, $_POST['email']);
+$c=mysqli_real_escape_string($l, $_POST['creditcard']);
+$a=mysqli_real_escape_string($l, $_POST['address']);
+$p=mysqli_real_escape_string($l, $_POST['password']);
+$m= new mysqli("localhost", "root", "", "foodorder");
+$q="INSERT INTO customer (ID, Name, Telephone, Email, Creditcard, Address, Password) VALUES ('".$id."', '".$n."', '".$t."', '".$e."', '".$c."', '".$a."', '".$p."')";
+$r=$m->query($q);
+mysqli_close($m);
+if (!$r) { echo "User has NOT been added into database.";
+echo mysql_error ();
+}
+else 
+{ 
+echo "User has been added into database.";
+}
+?>
+</body>
+</html>

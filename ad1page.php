@@ -1,0 +1,145 @@
+<?php
+SESSION_START();
+?>
+<!doctype html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css">
+
+    <link rel="stylesheet" href="assets/css/main.css">
+
+    <title>Страница Админа</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon.png">
+</head>
+<body>
+
+<?php
+$mysqli = new mysqli("localhost", "root", "", "order");
+$sql="SELECT Date FROM orders WHERE Readiness=False GROUP BY Date DESC";
+$result = $mysqli->query($sql);
+$s=0;
+if ($result->num_rows > 0) {?>
+<table align="center" border="1" width="100%">
+<tr align="center">
+<th width="15%">Date</th>
+<th><table  align="center" border="1" width="100%">
+<tr align="center" width="100%">
+		<th  width="10%" >Time</th>
+		<th  width="20%">Customer</th>
+		<th  width="40%"> <table><tr>Dishes</tr>
+		<tr>
+						<th align="center" width="20%">Name</th>
+						<th align="center" width="10%">Quantity</th>
+						<th align="center" width="10%">Cost</th>
+		</tr>
+		</table>
+		</th>
+		<th  width="15%">Total cost</th>
+		<th width="15%">Readiness</th>
+</tr>
+</table>
+</th>
+</tr>
+<?php
+    while($row = $result->fetch_assoc()) {
+		
+			?>
+	    <tr align="center"  style="border-right: 1px solid black; border-collapse: collapse;">
+		<td><?=$row["Date"]?></td>
+		<td>
+		<table border="1" width="100%">
+		<?php $connec = new mysqli("localhost", "root", "", "order");
+		$sqlr="SELECT Time FROM orders  WHERE orders.Date='".$row["Date"]."' AND Readiness=False  GROUP BY Time ORDER BY Time";				
+		$rests = $connec->query($sqlr);
+		if ($rests->num_rows > 0) {
+			while($rowt = $rests->fetch_assoc()){
+			    ?>
+				<tr>
+				<td width="10%"  align="center"><?=$rowt["Time"]?></td>
+				<td>
+				<table width="100%">
+				 
+				<?php $conn = new mysqli("localhost", "root", "", "order");
+				$sr="SELECT customer.Name, SUM(Cost) FROM orders INNER JOIN customer ON orders.CustomerID=customer.ID WHERE orders.Date='".$row["Date"]."' AND orders.Time='".$rowt["Time"]."' AND Readiness=False GROUP BY customer.Name ORDER BY customer.Name";
+				$res = $conn->query($sr);
+				if ($res->num_rows > 0) {
+					while($r = $res->fetch_assoc()){
+						?>
+						<tr>
+						<td width="22%" align="center" ><?=$r["Name"]?></td>
+						<td width="44%" align="center">
+						
+						<table align="left" width="100%">
+					
+						<?php $c = new mysqli("localhost", "root", "", "order");
+						$n="SELECT ID FROM customer WHERE Name='".$r["Name"]."'";
+						$id = $c->query($n);
+						if ($id->num_rows > 0) {
+							while($dan = $id->fetch_assoc()){
+								$l=$dan['ID'];
+							    $request="SELECT menu.Dish, menu.Price, Quantity FROM orders INNER JOIN menu ON orders.DishID=menu.ID WHERE orders.Date='".$row["Date"]."' AND orders.Time='".$rowt["Time"]."' AND Readiness=False AND orders.CustomerID='".$l."'";				
+								$results = $c->query($request);
+								if ($results->num_rows > 0) {
+									$array=array();
+									$arr=array();
+									$a=array();
+									while($roow = $results->fetch_assoc()){
+										$counter=1;
+										if (in_array($roow['Dish'], $array)) {
+											$arr[$roow['Dish']]=$arr[$roow['Dish']]+$roow['Quantity'];
+											$a[$roow['Dish']]=$roow["Price"]*$arr[$roow['Dish']];
+											}
+											else {
+												$array[]=$roow['Dish'];
+												$arr[$roow['Dish']]=$roow['Quantity'];
+												$a[$roow['Dish']]=$roow["Price"];
+												}
+									}
+        							$lt=count($array);
+									for ($i=0; $i<$lt; $i++){
+										?><tr width='100%' align="center"><td  width='48%'><?php echo $array[$i];?></td>
+										<td width='30%' align="center"><?php echo $arr[$array[$i]];?></td>
+										<td width='30%' align="center"><?php echo $a[$array[$i]];?>tg</td>  <?php
+										} 
+								}
+							}
+						}?>
+				</tr>
+				</table>
+				</td>
+				<td width="17%" align="center"><?=$r["SUM(Cost)"]?></td>
+				<td width="17%" align="center"><a href="ready.php">READY!</a></td> </form>
+				</tr>
+					<?php
+					}
+				}?>
+				</table>
+				</td>
+				</tr>
+			<?php
+			}
+		}?>
+		</table>
+		</td>
+	<?php
+	}?>
+	</tr>
+	</table>
+	<?php
+}
+    else {
+  echo "0 results";
+}
+?>
+<br>
+
+<button type="button"><a href="admpage.php">Reports</a></button>
+
+</body>
+

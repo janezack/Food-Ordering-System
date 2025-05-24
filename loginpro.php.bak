@@ -1,0 +1,38 @@
+<?php
+SESSION_START();
+$mysqli = new mysqli("localhost", "root", "", "order");
+include 'security.php';
+$l = mysqli_connect("localhost", "root", "", "order");
+IF ($_POST['wau']=="Customer"){
+	$strSQL ="select * from customer WHERE Name='$_POST[Name]' AND (Password)='$_POST[Password]'";
+	$result=$mysqli->query($strSQL);
+	$row_cnt = mysqli_num_rows($result);
+	IF ($row_cnt>0){
+	$row=mysqli_fetch_assoc($result);
+    $_SESSION['ID']=$row['ID'];
+	$_SESSION['CName']=$_POST['Name']; 
+	header('Location:cuspage.php');
+    }
+    ELSE {
+		echo "The username and password entered are incorrect";
+		echo "<br><br><a href='login.php'>Back to login</a>";
+exit();}}
+	
+ELSE {
+	$strSQL ="select * from manager WHERE Name='$_POST[Name]' AND (Password)='$_POST[Password]'";
+	$result=$mysqli->query($strSQL);
+	$row_cnt = mysqli_num_rows($result);
+	
+IF ($row_cnt>0){
+	$row=mysqli_fetch_assoc($result);
+	$_SESSION['MName']=$_POST['Name']; 
+
+
+	header('Location:ad1page.php');
+}
+ELSE {
+	echo "The username and password entered are incorrect";
+	echo "<br><br><a href='login.php'>Back to login</a>";
+	exit();
+}
+}?>
